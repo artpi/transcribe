@@ -1,0 +1,30 @@
+
+
+name: Transcribe
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  build:
+    name: Build all projects
+    runs-on: ubuntu-latest
+    timeout-minutes: 20  # 2022-02-10: We've gotten the build down to ~9-15 minutes now! p9dueE-4dJ-p2
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install deps
+        run: sudo apt update && sudo apt-get install -y ffmpeg youtube-dl python3-pip
+
+      - name: Install whisper
+        run: pip3 install git+https://github.com/openai/whisper.git
+
+      - name: Install whisper
+        run: ./transcribe.sh
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: transcription
+          path: transcriptions/
