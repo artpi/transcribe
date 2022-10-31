@@ -13,43 +13,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install deps
-        run: sudo apt update && sudo apt-get install -y ffmpeg python3-pip
+      - name: Check if already transcribed
+        run: echo "${{ github.event.issue.body }}=$( gh search issues "${{ github.event.issue.body }}" --repo artpi/transcribe --json url -L 1 | jq -r ".[0].url" )" >> $GITHUB_ENV
 
-      - name: Install Youtube-dl
-        run: sudo pip3 install youtube-dl && hash youtube-dl
-
-      - name: Download video from the appropriate service
-        run: youtube-dl -v -f 250 --print-json "${{ github.event.issue.body }}" > output.json
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: data.json
-          path: output.json
-
-      - name: Update title
-        run: gh issue edit $ISSUE -t "$(jq -r ".title" < output.json)"
+      - run: gh issue comment $ISSUE -b "That video has been already transcribed.\n ${{ env.PREVIOUS }}"
+        if: PREVIOUS != "null"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE: ${{ github.event.issue.html_url }}
 
       - run: gh issue comment $ISSUE --body "Running transcription, this may take a while."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE: ${{ github.event.issue.html_url }}
-
-      - name: Install whisper
-        run: pip3 install git+https://github.com/openai/whisper.git
-
-      - name: Run transcription
-        run: whisper -o ./transcriptions "./$(jq -r "._filename"  < ./output.json)"
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: transcription.txt
-          path: ./transcriptions/$(jq -r "._filename"  < ./output.json).txt
-
-      - run: gh issue comment $ISSUE -F "./transcriptions/$(jq -r "._filename"  < ./output.json).txt"
+        if: PREVIOUS == "null"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE: ${{ github.event.issue.html_url }}
