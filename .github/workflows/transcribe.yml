@@ -47,9 +47,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: transcription.txt
-          path: ./transcriptions/$(jq -r "._filename"  < ./output.json).txt"
+          path: ./transcriptions/$(jq -r "._filename"  < ./output.json).txt
 
-      - run: gh issue comment $ISSUE -F ./transcriptions/$(jq -r "._filename"  < ./output.json).txt"
+      - run: gh issue comment $ISSUE -F "./transcriptions/$(jq -r "._filename"  < ./output.json).txt"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE: ${{ github.event.issue.html_url }}
