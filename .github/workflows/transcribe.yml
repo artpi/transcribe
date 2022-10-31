@@ -2,7 +2,7 @@
 
 name: Transcribe
 on:
-  pull_request:
+  issue:
     types:
       - opened
 
@@ -25,9 +25,20 @@ jobs:
         run: pip3 install git+https://github.com/openai/whisper.git
 
       - name: Run transcription
-        run: ./transcribe.sh
+        run: ./transcribe.sh "${{ github.event.issue.body }}"
 
       - uses: actions/upload-artifact@v3
         with:
-          name: transcription
-          path: transcriptions/
+          name: data.json
+          path: output.json
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: transcription.txt
+          path: output.txt
+
+      - name: Add comment
+        uses: peter-evans/create-or-update-comment@a35cf36e5301d70b76f316e867e7788a55a31dae
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body-file: output.txt
