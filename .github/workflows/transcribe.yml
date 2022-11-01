@@ -24,7 +24,7 @@ jobs:
           PREVIOUS: ${{ env.PREVIOUS }}
 
       - run: gh issue comment $ISSUE --body "Running transcription, this may take a while."
-        if: env.PREVIOUS = null
+        if: env.PREVIOUS == null
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE: ${{ github.event.issue.html_url }}
