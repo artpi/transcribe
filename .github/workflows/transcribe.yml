@@ -16,14 +16,15 @@ jobs:
       - name: Check if already transcribed
         run: echo "PREVIOUS=$( gh search issues "${{ github.event.issue.body }}" --repo artpi/transcribe --json url -L 1 | jq -r ".[0].url" )" >> $GITHUB_ENV
 
-      - run: gh issue comment $ISSUE -b "That video has been already transcribed.\n ${{ env.PREVIOUS }}"
-        if: env.PREVIOUS != 'null'
+      - run: gh issue comment $ISSUE -b "That video has been already transcribed. ${{ env.PREVIOUS }}"
+        if: env.PREVIOUS != null
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE: ${{ github.event.issue.html_url }}
+          PREVIOUS: ${{ env.PREVIOUS }}
 
       - run: gh issue comment $ISSUE --body "Running transcription, this may take a while."
-        if: env.PREVIOUS == 'null'
+        if: env.PREVIOUS = null
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE: ${{ github.event.issue.html_url }}
