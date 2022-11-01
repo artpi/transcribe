@@ -14,22 +14,24 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Check if already transcribed
-        run: echo "PREVIOUS=$( gh search issues "${{ github.event.issue.body }}" --repo artpi/transcribe --json url -L 1 | jq -r ".[0].url" )" >> $GITHUB_ENV
-
-      - run: gh issue comment $ISSUE -b "That video has been already transcribed. ${{ env.PREVIOUS }}"
-        if: env.PREVIOUS != null
+        id: check
+        shell: bash
+        run: |
+          PREVIOUS=$( gh search issues "${{ github.event.issue.body }}" --repo artpi/transcribe --json url -L 1 | jq -r ".[0].url" )
+          if [ PREVIOUS != null ] ; then
+            echo ::set-output name=continue::false
+            gh issue comment $ISSUE -b "That video has been already transcribed. $PREVIOUS"
+            gh issue close $ISSUE
+          else
+            echo ::set-output name=continue::true
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE: ${{ github.event.issue.html_url }}
-          PREVIOUS: ${{ env.PREVIOUS }}
 
       - run: gh issue comment $ISSUE --body "Running transcription, this may take a while."
-        if: env.PREVIOUS == null
+        if: ${{ steps.check.outputs.continue }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE: ${{ github.event.issue.html_url }}
 
-      - run: gh issue close $ISSUE
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE: ${{ github.event.issue.html_url }}
